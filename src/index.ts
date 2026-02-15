@@ -1,7 +1,7 @@
-import KnockAgent from "./KnockAgent";
+import KnockAgent from "./KnockAgent.ts";
 
 export default KnockAgent;
 
-export * from "./KnockAgent";
-export * from "./utils";
-export { VirtualFS } from "./Loader";
+export * from "./KnockAgent.ts";
+export * from "./utils.ts";
+export { VirtualFS } from "./Loader.ts";

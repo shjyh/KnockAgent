@@ -1,6 +1,6 @@
-import Loader, { VirtualFS } from "./Loader";
+import Loader, { VirtualFS } from "./Loader.ts";
 import { AiSdkModel } from "@openai/agents-extensions";
-import { Agent, CallModelInputFilterArgs, ModelInputData, ModelSettings, Runner, Tool } from "@openai/agents";
+import { Agent, CallModelInputFilterArgs, ModelInputData, ModelSettings, Runner, setTracingDisabled, Tool } from "@openai/agents";
 import { promptWithHandoffInstructions } from "@openai/agents-core/extensions";
 import { ModelSettingsReasoningEffort, ModelSettingsReasoning, ModelSettingsText } from "@openai/agents-core/model";
 import { Liquid } from "liquidjs";
@@ -50,6 +50,10 @@ interface AgentDefineConfig<ProviderNames extends string> {
     inputSuffix: string;
 }
 
+type RunInput<T> = Parameters<typeof Runner.prototype.run<Agent<T>, T>>[1];
+
+setTracingDisabled(true);
+
 export default class KnockAgent<Context extends object, ProviderNames extends string> {
     readonly #loader: Loader;
     readonly #providers: Record<ProviderNames, AiProvider>
@@ -57,7 +61,6 @@ export default class KnockAgent<Context extends object, ProviderNames extends st
     readonly #runner: Runner;
     readonly #agents: Map<string, Agent<Context>>;
     readonly #agentsConfig: Map<Agent<Context>, AgentDefineConfig<ProviderNames>>;
-    readonly #agent: Agent<Context>;
     readonly #defaultModel: `${ProviderNames}/${string}`;
     readonly #defaultTemperature: number;
     readonly #liquid: Liquid;
@@ -65,7 +68,8 @@ export default class KnockAgent<Context extends object, ProviderNames extends st
     constructor(config: KnockAgentConfig<ProviderNames>) {
         // init fields
         this.#runner = new Runner({
-            callModelInputFilter: this.#runnerModelInputFilter.bind(this)
+            callModelInputFilter: this.#runnerModelInputFilter.bind(this),
+            tracingDisabled: true
         })
         this.#liquid = new Liquid({
             strictFilters: true,
@@ -82,12 +86,6 @@ export default class KnockAgent<Context extends object, ProviderNames extends st
 
         this.#providers = config.providers;
 
-        // create main agent
-        const mainAgent = this.getAgent("main");
-        if (!mainAgent) {
-            throw new Error("[KnockAgent] Main Agent Not Exists");
-        }
-        this.#agent = mainAgent;
         if (config.tools && config.tools.length) {
             for (let tool of config.tools) {
                 this.#tools.set(tool.name, tool);
@@ -135,7 +133,7 @@ export default class KnockAgent<Context extends object, ProviderNames extends st
         this.#models.set(model, aiModel);
         return aiModel;
     }
-    getAgent(path: string) {
+    #getAgent(path: string) {
         if (this.#agents.has(path)) {
             return this.#agents.get(path);
         }
@@ -203,15 +201,30 @@ export default class KnockAgent<Context extends object, ProviderNames extends st
         this.#agentsConfig.set(agent, agentDefineConfig);
 
         if (agentDefineConfig.handoffs.length) {
-            agent.handoffs = agentDefineConfig.handoffs.map(h => this.getAgent(h)).filter(a => !!a);
+            agent.handoffs = agentDefineConfig.handoffs.map(h => this.#getAgent(h)).filter(a => !!a);
         }
 
         if (agentDefineConfig.agents.length || agentDefineConfig.tools.length) {
-            agent.tools = [...agentDefineConfig.agents.map(h => this.getAgent(h)).filter(a => !!a).map(a => a.asTool({
+            agent.tools = [...agentDefineConfig.agents.map(h => this.#getAgent(h)).filter(a => !!a).map(a => a.asTool({
                 toolName: `agent_${a.name}`,
                 toolDescription: a.handoffDescription,
             })), ...agentDefineConfig.tools.map(t => this.#tools.get(t)).filter(t => !!t)];
         }
         return agent;
+    }
+
+    run(input: RunInput<Context>, context: Context = {} as Context) {
+        return this.runAgent("main", input, context);
+    }
+
+    runAgent(agentPath: string, input: RunInput<Context>, context: Context = {} as Context) {
+        const agent = this.#getAgent(agentPath);
+        if (!agent) {
+            throw new Error(`[KnockAgent] Agent [${agentPath}] Not Exists`);
+        }
+        return this.#runner.run(agent, input, {
+            context,
+            stream: true
+        });
     }
 }
