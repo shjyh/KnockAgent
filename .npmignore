@@ -1,0 +1,16 @@
+node_modules/
+src/
+test/
+tests/
+coverage/
+.vite/
+.idea/
+.vscode/
+.github/
+*.log
+*.tsbuildinfo
+vite.config.ts
+tsconfig.json
+tsconfig.build.json
+.gitignore
+.npmignore

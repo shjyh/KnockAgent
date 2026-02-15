@@ -1,0 +1,59 @@
+{
+  "name": "knockagent",
+  "version": "0.1.0",
+  "description": "Convention-over-configuration agent framework powered by Markdown front matter.",
+  "author": "shjyh <shjyh651079151@gmail.com>",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "tsx --test test/**/*.test.ts",
+    "prepublishOnly": "pnpm run test && pnpm run build"
+  },
+  "keywords": [
+    "agent",
+    "ai",
+    "framework",
+    "markdown",
+    "front-matter",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shjyh/KnockAgent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shjyh/KnockAgent/issues"
+  },
+  "homepage": "https://github.com/shjyh/KnockAgent#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20.19.0 || >=22.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@openai/agents": "^0.4.7",
+    "@openai/agents-core": "^0.4.8",
+    "@openai/agents-extensions": "^0.4.7",
+    "gray-matter": "^4.0.3",
+    "liquidjs": "^10.24.0",
+    "zod": "^4.3.6"
+  }
+}
