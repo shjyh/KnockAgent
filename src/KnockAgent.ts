@@ -22,16 +22,21 @@ export interface KnockAgentConfig<ProviderNames extends string> {
     tools?: Tool[];
 }
 
-function parseTemprature(t?: number | string) {
+function parseTemprature(t?: any) {
     if (typeof t === "number") return t;
-    if (!t) return null;
-    const n = Number.parseFloat(t);
-    return Number.isNaN(n) ? null : n;
+    if (typeof t === "string") {
+        const n = Number.parseFloat(t);
+        return Number.isNaN(n) ? null : n;
+    }
+    return null;
 }
 
-function split(list: string) {
-    if (!list) return [];
-    return list.split(",").map(l => l.trim()).filter(l => !!l);
+function split(list: any): string[] {
+    if (Array.isArray(list)) return list.map(item => String(item));
+    if (typeof list === "string") {
+        return list.split(",").map(l => l.trim()).filter(l => !!l);
+    }
+    return [];
 }
 
 interface AgentDefineConfig<ProviderNames extends string> {
@@ -43,11 +48,15 @@ interface AgentDefineConfig<ProviderNames extends string> {
     handoffs: string[];
     agents: string[];
     tools: string[];
-    reasoningEffort?: ModelSettingsReasoningEffort;
-    reasoningSummary?: ModelSettingsReasoning["summary"]
+    reasoning?: {
+        effort?: ModelSettingsReasoningEffort;
+        summary?: ModelSettingsReasoning["summary"]
+    }
     verbosity?: ModelSettingsText["verbosity"];
-    inputPrefix: string;
-    inputSuffix: string;
+    input?: {
+        prefix?: string;
+        suffix?: string;
+    }
 }
 
 type RunInput<T> = Parameters<typeof Runner.prototype.run<Agent<T>, T>>[1];
@@ -94,7 +103,7 @@ export default class KnockAgent<Context extends object, ProviderNames extends st
     }
     #runnerModelInputFilter(input: CallModelInputFilterArgs): ModelInputData {
         const agentConfig = this.#agentsConfig.get(input.agent as any);
-        if (!agentConfig || (!agentConfig.inputPrefix && !agentConfig.inputSuffix)) {
+        if (!agentConfig || !agentConfig.input || (!agentConfig.input.prefix && !agentConfig.input.suffix)) {
             return input.modelData;
         }
         const modelInput = input.modelData.input;
@@ -103,11 +112,11 @@ export default class KnockAgent<Context extends object, ProviderNames extends st
 
         if ("role" in lastInput && lastInput.role === "user") {
             let content = lastInput.content;
-            if (agentConfig.inputPrefix) {
-                content = agentConfig.inputPrefix + "\n\n" + content;
+            if (agentConfig.input.prefix) {
+                content = agentConfig.input.prefix + "\n\n" + content;
             }
-            if (agentConfig.inputSuffix) {
-                content = content + "\n\n" + agentConfig.inputSuffix;
+            if (agentConfig.input.suffix) {
+                content = content + "\n\n" + agentConfig.input.suffix;
             }
             return {
                 instructions: input.modelData.instructions,
@@ -143,41 +152,75 @@ export default class KnockAgent<Context extends object, ProviderNames extends st
             return null;
         }
 
+        const data = agentMeta.data;
+
+        // Validation and Warnings
+        const warn = (field: string, expected: string, actual: any) => {
+            console.warn(`[KnockAgent] Agent [${path}] property "${field}" should be ${expected}, got ${typeof actual}`);
+        };
+
+        if (data.name !== undefined && typeof data.name !== "string") warn("name", "string", data.name);
+        if (data.model !== undefined && typeof data.model !== "string") warn("model", "string", data.model);
+        if (data.temperature !== undefined && typeof data.temperature !== "number" && typeof data.temperature !== "string") warn("temperature", "number or string", data.temperature);
+
+        ["handoffs", "agents", "tools"].forEach(key => {
+            if (data[key] !== undefined && typeof data[key] !== "string" && !Array.isArray(data[key])) {
+                warn(key, "string or array", data[key]);
+            }
+        });
+
+        if (data.reasoning !== undefined) {
+            if (typeof data.reasoning !== "object" || data.reasoning === null) {
+                warn("reasoning", "object", data.reasoning);
+            } else {
+                const r = data.reasoning as any;
+                if (r.effort !== undefined && typeof r.effort !== "string") warn("reasoning.effort", "string", r.effort);
+                if (r.summary !== undefined && typeof r.summary !== "string") warn("reasoning.summary", "string ('auto' | 'concise' | 'detailed')", r.summary);
+            }
+        }
+        if (data.input !== undefined) {
+            if (typeof data.input !== "object" || data.input === null) {
+                warn("input", "object", data.input);
+            } else {
+                const i = data.input as any;
+                if (i.prefix !== undefined && typeof i.prefix !== "string") warn("input.prefix", "string", i.prefix);
+                if (i.suffix !== undefined && typeof i.suffix !== "string") warn("input.suffix", "string", i.suffix);
+            }
+        }
+
+        if (data.verbosity !== undefined && typeof data.verbosity !== "string") warn("verbosity", "string", data.verbosity);
+
         const agentDefineConfig: AgentDefineConfig<ProviderNames> = {
-            name: agentMeta.data.name || path.replace(/\//g, "_"),
-            desc: agentMeta.data.desc || agentMeta.data.description || "",
-            model: agentMeta.data.model || this.#defaultModel,
-            temperature: parseTemprature(agentMeta.data.temperature) || this.#defaultTemperature,
+            name: (typeof data.name === "string" ? data.name : "") || path.replace(/\//g, "_"),
+            desc: (typeof data.desc === "string" ? data.desc : (typeof data.description === "string" ? data.description : "")) || "",
+            model: (typeof data.model === "string" ? data.model : this.#defaultModel) as `${ProviderNames}/${string}`,
+            temperature: parseTemprature(data.temperature) ?? this.#defaultTemperature,
             instructions: agentMeta.content,
-            handoffs: split(agentMeta.data.handoffs),
-            agents: split(agentMeta.data.agents),
-            tools: split(agentMeta.data.tools),
-            inputPrefix: agentMeta.data.prefix || "",
-            inputSuffix: agentMeta.data.suffix || ""
+            handoffs: split(data.handoffs),
+            agents: split(data.agents),
+            tools: split(data.tools),
         }
-        if (agentMeta.data.reasoning_effort) {
-            agentDefineConfig.reasoningEffort = agentMeta.data.reasoning_effort;
+
+        if (typeof data.reasoning === "object" && data.reasoning !== null) {
+            agentDefineConfig.reasoning = data.reasoning;
         }
-        if (agentMeta.data.reasoning_summary) {
-            agentDefineConfig.reasoningSummary = agentMeta.data.reasoning_summary;
+
+        if (data.verbosity) {
+            agentDefineConfig.verbosity = data.verbosity;
         }
-        if (agentMeta.data.verbosity) {
-            agentDefineConfig.verbosity = agentMeta.data.verbosity;
+
+        if (typeof data.input === "object" && data.input !== null) {
+            agentDefineConfig.input = data.input;
         }
 
         const modelSettings: ModelSettings = {
             temperature: agentDefineConfig.temperature
         }
 
-        if (agentDefineConfig.reasoningEffort || agentDefineConfig.reasoningSummary) {
-            modelSettings.reasoning = {};
-            if (agentDefineConfig.reasoningEffort) {
-                modelSettings.reasoning.effort = agentDefineConfig.reasoningEffort;
-            }
-            if (agentDefineConfig.reasoningSummary) {
-                modelSettings.reasoning.summary = agentDefineConfig.reasoningSummary;
-            }
+        if (agentDefineConfig.reasoning) {
+            modelSettings.reasoning = agentDefineConfig.reasoning;
         }
+
         if (agentDefineConfig.verbosity) {
             modelSettings.text = { verbosity: agentDefineConfig.verbosity };
         }
