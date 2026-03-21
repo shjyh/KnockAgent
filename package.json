@@ -52,8 +52,10 @@
     "@openai/agents": "^0.4.7",
     "@openai/agents-core": "^0.4.8",
     "@openai/agents-extensions": "^0.4.7",
+    "@openrouter/sdk": "^0.8.0",
     "gray-matter": "^4.0.3",
     "liquidjs": "^10.24.0",
+    "openai": "^6.22.0",
     "zod": "^4.3.6"
   }
 }

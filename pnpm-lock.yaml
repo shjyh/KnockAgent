@@ -17,12 +17,18 @@ importers:
       '@openai/agents-extensions':
         specifier: ^0.4.7
         version: 0.4.7(@ai-sdk/provider@3.0.8)(@openai/agents@0.4.7(ws@8.19.0)(zod@4.3.6))(ai@6.0.82(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
+      '@openrouter/sdk':
+        specifier: ^0.8.0
+        version: 0.8.0
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3
       liquidjs:
         specifier: ^10.24.0
         version: 10.24.0
+      openai:
+        specifier: ^6.22.0
+        version: 6.22.0(ws@8.19.0)(zod@4.3.6)
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -274,6 +280,9 @@ packages:
     resolution: {integrity: sha512-9XE+iutR3lrj9zAYii7EswJmYxcLW3nDM8SFICLoraUkLp/28ycfE3ulSPhge0mGiAT0sKp+ZFFUBqXMhEi9yg==}
     peerDependencies:
       zod: ^4.0.0
+
+  '@openrouter/sdk@0.8.0':
+    resolution: {integrity: sha512-hmCY5CE/adBmwZmrwuSx7Pw5UngcyuA9FvgpouyWEX8m283omLD1BqJlYYkLdVoUdI8iGNFHKezH2CeJqsVymw==}
 
   '@opentelemetry/api@1.9.0':
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
@@ -588,8 +597,8 @@ packages:
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
 
-  openai@6.21.0:
-    resolution: {integrity: sha512-26dQFi76dB8IiN/WKGQOV+yKKTTlRCxQjoi2WLt0kMcH8pvxVyvfdBDkld5GTl7W1qvBpwVOtFcsqktj3fBRpA==}
+  openai@6.22.0:
+    resolution: {integrity: sha512-7Yvy17F33Bi9RutWbsaYt5hJEEJ/krRPOrwan+f9aCPuMat1WVsb2VNSII5W1EksKT6fF69TG/xj4XzodK3JZw==}
     hasBin: true
     peerDependencies:
       ws: ^8.18.0
@@ -884,7 +893,7 @@ snapshots:
   '@openai/agents-core@0.4.7(ws@8.19.0)(zod@4.3.6)':
     dependencies:
       debug: 4.4.3
-      openai: 6.21.0(ws@8.19.0)(zod@4.3.6)
+      openai: 6.22.0(ws@8.19.0)(zod@4.3.6)
     optionalDependencies:
       '@modelcontextprotocol/sdk': 1.26.0(zod@4.3.6)
       zod: 4.3.6
@@ -896,7 +905,7 @@ snapshots:
   '@openai/agents-core@0.4.8(ws@8.19.0)(zod@4.3.6)':
     dependencies:
       debug: 4.4.3
-      openai: 6.21.0(ws@8.19.0)(zod@4.3.6)
+      openai: 6.22.0(ws@8.19.0)(zod@4.3.6)
     optionalDependencies:
       '@modelcontextprotocol/sdk': 1.26.0(zod@4.3.6)
       zod: 4.3.6
@@ -924,7 +933,7 @@ snapshots:
     dependencies:
       '@openai/agents-core': 0.4.7(ws@8.19.0)(zod@4.3.6)
       debug: 4.4.3
-      openai: 6.21.0(ws@8.19.0)(zod@4.3.6)
+      openai: 6.22.0(ws@8.19.0)(zod@4.3.6)
       zod: 4.3.6
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -950,7 +959,7 @@ snapshots:
       '@openai/agents-openai': 0.4.7(ws@8.19.0)(zod@4.3.6)
       '@openai/agents-realtime': 0.4.7(zod@4.3.6)
       debug: 4.4.3
-      openai: 6.21.0(ws@8.19.0)(zod@4.3.6)
+      openai: 6.22.0(ws@8.19.0)(zod@4.3.6)
       zod: 4.3.6
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -958,6 +967,10 @@ snapshots:
       - supports-color
       - utf-8-validate
       - ws
+
+  '@openrouter/sdk@0.8.0':
+    dependencies:
+      zod: 4.3.6
 
   '@opentelemetry/api@1.9.0':
     optional: true
@@ -1352,7 +1365,7 @@ snapshots:
       wrappy: 1.0.2
     optional: true
 
-  openai@6.21.0(ws@8.19.0)(zod@4.3.6):
+  openai@6.22.0(ws@8.19.0)(zod@4.3.6):
     optionalDependencies:
       ws: 8.19.0
       zod: 4.3.6
