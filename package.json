@@ -1,6 +1,6 @@
 {
   "name": "knockagent",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Convention-over-configuration agent framework powered by Markdown front matter.",
   "author": "shjyh <shjyh651079151@gmail.com>",
   "license": "MIT",
