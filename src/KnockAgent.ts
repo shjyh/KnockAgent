@@ -59,17 +59,17 @@ interface AgentDefineConfig<ProviderNames extends string> {
     }
 }
 
-type RunInput<T> = Parameters<typeof Runner.prototype.run<Agent<T>, T>>[1];
+export type RunInput<T> = Parameters<typeof Runner.prototype.run<Agent<T>, T>>[1];
 
 setTracingDisabled(true);
 
-export default class KnockAgent<Context extends object, ProviderNames extends string> {
+export default class KnockAgent<ProviderNames extends string> {
     readonly #loader: Loader;
     readonly #providers: Record<ProviderNames, AiProvider>
     readonly #models: Map<string, AiSdkModelWithMapModelSettings>;
     readonly #runner: Runner;
-    readonly #agents: Map<string, Agent<Context>>;
-    readonly #agentsConfig: Map<Agent<Context>, AgentDefineConfig<ProviderNames>>;
+    readonly #agents: Map<string, Agent<any>>;
+    readonly #agentsConfig: Map<Agent<any>, AgentDefineConfig<ProviderNames>>;
     readonly #defaultModel: `${ProviderNames}/${string}`;
     readonly #defaultTemperature: number;
     readonly #liquid: Liquid;
@@ -227,7 +227,7 @@ export default class KnockAgent<Context extends object, ProviderNames extends st
 
         const model = this.#getModel(agentDefineConfig.model, path);
 
-        const agent = new Agent<Context>({
+        const agent = new Agent<any>({
             name: agentDefineConfig.name,
             handoffDescription: agentDefineConfig.desc,
             model,
@@ -256,11 +256,11 @@ export default class KnockAgent<Context extends object, ProviderNames extends st
         return agent;
     }
 
-    run(input: RunInput<Context>, context: Context = {} as Context) {
+    run<Context extends object>(input: RunInput<Context>, context: Context = {} as Context) {
         return this.runAgent("main", input, context);
     }
 
-    runAgent(agentPath: string, input: RunInput<Context>, context: Context = {} as Context) {
+    runAgent<Context extends object>(agentPath: string, input: RunInput<Context>, context: Context = {} as Context) {
         const agent = this.#getAgent(agentPath);
         if (!agent) {
             throw new Error(`[KnockAgent] Agent [${agentPath}] Not Exists`);
