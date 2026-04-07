@@ -61,6 +61,7 @@ interface AgentDefineConfig<ProviderNames extends string> {
 
 export type RunInput<T> = Parameters<typeof Runner.prototype.run<Agent<T>, T>>[1];
 export { AgentInputItem } from "@openai/agents";
+export { tool, type Tool } from "@openai/agents";
 
 setTracingDisabled(true);
 
